@@ -1,0 +1,9 @@
+srv_port: "8080"
+db:
+  host: "localhost"
+  port: "5432"
+  dbname: "postgres"
+  sslmode: "disable"
+
+rdb:
+  address: "localhost:6379"
