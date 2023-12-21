@@ -54,8 +54,20 @@ func (r *AuthPostgres) Check(id int64) (bool, error) {
 }
 
 func (r *AuthPostgres) Delete(id int64) error {
+
+	var err error
+
+	exists, err := r.Check(id)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return err
+	}
+
 	sqlStatement := "DELETE FROM users WHERE id=$1"
-	_, err := r.db.Exec(sqlStatement, id)
+	_, err = r.db.Exec(sqlStatement, id)
 	if err != nil {
 		return err
 	}

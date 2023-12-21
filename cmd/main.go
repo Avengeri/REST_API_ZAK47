@@ -2,21 +2,20 @@ package main
 
 import (
 	srv "Interface_droch_3"
-	"fmt"
-
 	_ "Interface_droch_3/docs"
+	"Interface_droch_3/internal/repository/postgres"
+	"fmt"
 	_ "github.com/swaggo/files"
 	_ "github.com/swaggo/gin-swagger"
+	"os"
 
 	"Interface_droch_3/internal/handler"
 	"Interface_droch_3/internal/repository"
-	"Interface_droch_3/internal/repository/postgres"
 	"Interface_droch_3/internal/service"
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 
 	"log"
-	"os"
 )
 
 // @title REST_API_ZAK
