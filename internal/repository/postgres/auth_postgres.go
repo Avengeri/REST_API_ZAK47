@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"Interface_droch_3/internal/model"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -13,88 +14,22 @@ func NewAuthPostgres(db *sqlx.DB) *AuthPostgres {
 	return &AuthPostgres{db: db}
 }
 
-func (r *AuthPostgres) Set(user *model.User) error {
+func (r *AuthPostgres) CreateUser(user model.User) (int, error) {
+	var id int
+	query := fmt.Sprintf("INSERT INTO users (name,username,password_hash) values($1,$2,$3) RETURNING id")
 
-	sqlStatement := `
-INSERT INTO users(id, name) VALUES ($1,$2)
-`
-	_, err := r.db.Exec(sqlStatement, user.Id, user.Name)
-	if err != nil {
-		return err
+	row := r.db.QueryRow(query, user.Name, user.Username, user.Password)
+	if err := row.Scan(&id); err != nil {
+		return 0, err
 	}
-	return nil
+	return id, nil
 }
 
-func (r *AuthPostgres) Get(id int64) (*model.User, error) {
-	sqlStatement := "SELECT name FROM users WHERE id=$1"
-
+func (r *AuthPostgres) GetUser(username, password string) (model.User, error) {
 	var user model.User
 
-	err := r.db.QueryRow(sqlStatement, id).Scan(&user.Name)
-	if err != nil {
-		return nil, err
-	}
-	return &user, nil
-}
+	query := fmt.Sprintf("SELECT id FROM users WHERE username=$1 AND password_hash=$2")
+	err := r.db.Get(&user, query, username, password)
 
-func (r *AuthPostgres) Check(id int64) (bool, error) {
-	sqlStatement := "SELECT COUNT(*) FROM users WHERE id=$1"
-
-	var count int
-
-	err := r.db.QueryRow(sqlStatement, id).Scan(&count)
-
-	if err != nil {
-		return false, err
-	}
-	if count > 0 {
-		return true, nil
-	}
-	return false, nil
-}
-
-func (r *AuthPostgres) Delete(id int64) error {
-
-	var err error
-
-	exists, err := r.Check(id)
-	if err != nil {
-		return err
-	}
-
-	if !exists {
-		return err
-	}
-
-	sqlStatement := "DELETE FROM users WHERE id=$1"
-	_, err = r.db.Exec(sqlStatement, id)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *AuthPostgres) GetAllId() ([]int64, error) {
-
-	sqlStatement := "SELECT id FROM users;"
-
-	rows, err := r.db.Query(sqlStatement)
-	if err != nil {
-		return nil, err
-	}
-
-	var ids []int64
-
-	for rows.Next() {
-		var id int64
-		err = rows.Scan(&id)
-		if err != nil {
-			return nil, err
-		}
-		ids = append(ids, id)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-	return ids, nil
+	return user, err
 }

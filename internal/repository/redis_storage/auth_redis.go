@@ -26,7 +26,7 @@ func (r *AuthRedis) Set(user *model.User) error {
 	return r.rdb.Set(key, userJSON, 5*time.Minute).Err()
 }
 
-func (r *AuthRedis) Get(id int64) (*model.User, error) {
+func (r *AuthRedis) GetById(id int64) (*model.User, error) {
 	key := "user:" + strconv.Itoa(int(id))
 	userJSON, err := r.rdb.Get(key).Result()
 	if err != nil {
@@ -40,7 +40,7 @@ func (r *AuthRedis) Get(id int64) (*model.User, error) {
 	return &user, nil
 }
 
-func (r *AuthRedis) Check(id int64) (bool, error) {
+func (r *AuthRedis) CheckById(id int64) (bool, error) {
 	key := "user:" + strconv.Itoa(int(id))
 
 	exists, err := r.rdb.Exists(key).Result()

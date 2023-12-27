@@ -19,16 +19,21 @@ func NewHandler(service *service.Service) *Handler {
 
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
-	api := router.Group("/api")
+	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	auth := router.Group("/auth")
 	{
-		api.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-		auth := api.Group("/user")
+		auth.POST("/sign-up", h.signUP)
+		auth.POST("/sign-in", h.signIN)
+	}
+	api := router.Group("/api", h.userIdentity)
+	{
+		user := api.Group("/user")
 		{
-			auth.POST("/", h.CreateUser)
-			auth.GET("/:id", h.GetUser)
-			auth.GET("/check/:id", h.CheckUser)
-			auth.DELETE("/:id", h.DeleteUser)
-			auth.GET("/get_all", h.GetAllUsers)
+			user.POST("/", h.CreateUser)
+			user.GET("/:id", h.GetUser)
+			user.GET("/check/:id", h.CheckUser)
+			user.DELETE("/:id", h.DeleteUser)
+			user.GET("/get_all", h.GetAllUsers)
 		}
 	}
 	return router

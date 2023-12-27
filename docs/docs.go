@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/api/user": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create a new user with the provided JSON data",
                 "tags": [
                     "user"
@@ -45,19 +50,18 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/handler.errorResponse"
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/handler.errorResponse"
-                        }
                     }
                 }
             }
         },
         "/api/user/check/{id}": {
             "get": {
-                "description": "Check if a user with the provided ID exists",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "CheckById if a user with the provided ID exists",
                 "consumes": [
                     "application/json"
                 ],
@@ -67,7 +71,7 @@ const docTemplate = `{
                 "tags": [
                     "user"
                 ],
-                "summary": "Check if a user exists",
+                "summary": "CheckById if a user exists",
                 "parameters": [
                     {
                         "type": "integer",
@@ -96,19 +100,18 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/handler.errorResponse"
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/handler.errorResponse"
-                        }
                     }
                 }
             }
         },
         "/api/user/get_all": {
             "get": {
-                "description": "Get a list of all users with their IDs",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "GetById a list of all users with their IDs",
                 "consumes": [
                     "application/json"
                 ],
@@ -118,7 +121,7 @@ const docTemplate = `{
                 "tags": [
                     "user"
                 ],
-                "summary": "Get a list of all users",
+                "summary": "GetById a list of all users",
                 "responses": {
                     "200": {
                         "description": "List of user IDs",
@@ -140,7 +143,12 @@ const docTemplate = `{
         },
         "/api/user/{id}": {
             "get": {
-                "description": "Get a user with the provided JSON data",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "GetById a user with the provided JSON data",
                 "consumes": [
                     "application/json"
                 ],
@@ -150,7 +158,7 @@ const docTemplate = `{
                 "tags": [
                     "user"
                 ],
-                "summary": "Get a user",
+                "summary": "GetById a user",
                 "parameters": [
                     {
                         "type": "integer",
@@ -177,6 +185,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Delete a user with the provided ID",
                 "consumes": [
                     "application/json"
@@ -210,9 +223,95 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/handler.errorResponse"
                         }
+                    }
+                }
+            }
+        },
+        "/auth/sign-in": {
+            "post": {
+                "description": "Authenticates the user and returns the access token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "User authentication",
+                "parameters": [
+                    {
+                        "description": "User authentication data",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.signInInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful authentication, returns the access token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error or incorrect data",
+                        "schema": {
+                            "$ref": "#/definitions/handler.errorResponse"
+                        }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/sign-up": {
+            "post": {
+                "description": "Registers a new user and returns his ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Registering a new user",
+                "parameters": [
+                    {
+                        "description": "New user's data",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UserExampleRegistration"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A user with the specified ID has been successfully created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error or incorrect data",
+                        "schema": {
+                            "$ref": "#/definitions/handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/handler.errorResponse"
                         }
@@ -230,6 +329,23 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.signInInput": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "qwerty"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "ZAK"
+                }
+            }
+        },
         "handler.statusResponse": {
             "type": "object",
             "properties": {
@@ -240,6 +356,10 @@ const docTemplate = `{
         },
         "model.User": {
             "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
             "properties": {
                 "id": {
                     "type": "integer",
@@ -248,8 +368,40 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "ZAK"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "qwerty"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "ZAK"
                 }
             }
+        },
+        "model.UserExampleRegistration": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "qwerty"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "ZAK"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
@@ -261,7 +413,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "REST_API_ZAK",
-	Description:      "Программа для обучения REST API",
+	Description:      "REST API Training Program",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

@@ -16,9 +16,10 @@ import (
 // @Description Create a new user with the provided JSON data
 // @Tags user
 // @Param user body model.User true "User data in JSON format"
+// @SecurityDefinitions.apikey
+// @Security ApiKeyAuth
 // @Success 200 {object} statusResponse
 // @Failure 400 {object} errorResponse
-// @Failure 500 {object} errorResponse
 // @Router /api/user [post]
 func (h *Handler) CreateUser(c *gin.Context) {
 	var user model.User
@@ -28,22 +29,24 @@ func (h *Handler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	err := h.service.Set(&user)
+	err := h.service.User.Set(&user)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, statusResponse{Status: "Пользователь успешно создан"})
+	c.JSON(http.StatusOK, statusResponse{Status: "the user has been successfully created"})
 }
 
 // GetUser godoc
-// @Summary Get a user
-// @Description Get a user with the provided JSON data
+// @Summary GetById a user
+// @Description GetById a user with the provided JSON data
 // @Tags user
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID" format(int64)
+// @SecurityDefinitions.apikey
+// @Security ApiKeyAuth
 // @Success 200 {string} string "User get successfully"
 // @Failure 500 {object} errorResponse
 // @Router /api/user/{id} [get]
@@ -51,7 +54,7 @@ func (h *Handler) GetUser(c *gin.Context) {
 	userIDStr := c.Param("id")
 	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 
-	user, err := h.service.Get(userID)
+	user, err := h.service.User.GetById(userID)
 	if err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -61,8 +64,8 @@ func (h *Handler) GetUser(c *gin.Context) {
 }
 
 // CheckUser godoc
-// @Summary Check if a user exists
-// @Description Check if a user with the provided ID exists
+// @Summary CheckById if a user exists
+// @Description CheckById if a user with the provided ID exists
 // @Tags user
 // @Accept json
 // @Produce json
@@ -70,7 +73,8 @@ func (h *Handler) GetUser(c *gin.Context) {
 // @Success 200 {object} statusResponse
 // @Failure 400 {object} errorResponse
 // @Failure 404 {object} errorResponse
-// @Failure 500 {object} errorResponse
+// @SecurityDefinitions.apikey
+// @Security ApiKeyAuth
 // @Router /api/user/check/{id} [get]
 func (h *Handler) CheckUser(c *gin.Context) {
 	userIDStr := c.Param("id")
@@ -80,20 +84,18 @@ func (h *Handler) CheckUser(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Проверка пользователя с ID %d", userID)
+	log.Printf("verifying a user with an ID %d", userID)
 
-	exists, err := h.service.Check(userID)
+	exists, err := h.service.User.CheckById(userID)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	log.Printf("Пользователь найден: %v", exists)
-
 	if exists {
-		c.JSON(http.StatusOK, statusResponse{Status: "Пользователь успешно найден"})
+		c.JSON(http.StatusOK, statusResponse{Status: "the user was successfully found"})
 	} else {
-		c.JSON(http.StatusNotFound, errorResponse{Message: "Пользователь не найден"})
+		c.JSON(http.StatusNotFound, errorResponse{Message: "the user was not found"})
 	}
 }
 
@@ -104,9 +106,10 @@ func (h *Handler) CheckUser(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID" format(int64)
+// @SecurityDefinitions.apikey
+// @Security ApiKeyAuth
 // @Success 200 {object} statusResponse
 // @Failure 400 {object} errorResponse
-// @Failure 500 {object} errorResponse
 // @Router /api/user/{id} [delete]
 func (h *Handler) DeleteUser(c *gin.Context) {
 
@@ -118,27 +121,29 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	err = h.service.Delete(userID)
+	err = h.service.User.Delete(userID)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, statusResponse{Status: "Пользователь успешно удален"})
+	c.JSON(http.StatusOK, statusResponse{Status: "the user has been successfully deleted"})
 }
 
 // GetAllUsers godoc
-// @Summary Get a list of all users
-// @Description Get a list of all users with their IDs
+// @Summary GetById a list of all users
+// @Description GetById a list of all users with their IDs
 // @Tags user
 // @Accept json
 // @Produce json
+// @SecurityDefinitions.apikey
+// @Security ApiKeyAuth
 // @Success 200 {array} int "List of user IDs"
 // @Failure 400 {object} errorResponse
 // @Router /api/user/get_all [get]
 func (h *Handler) GetAllUsers(c *gin.Context) {
 
-	userIDs, err := h.service.GetAllId()
+	userIDs, err := h.service.User.GetAllId()
 	if err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return

@@ -3,56 +3,73 @@ package service
 import (
 	"Interface_droch_3/internal/model"
 	"Interface_droch_3/internal/repository"
+	"crypto/sha1"
+	"errors"
 	"fmt"
-	"log"
+	"github.com/golang-jwt/jwt"
+	"time"
 )
 
-type AuthService struct {
-	repo repository.StorageUsers
+const (
+	salt       = "sdfskjgkjh21413rgrsoijsdognl323"
+	signingKey = "sdgdfh#2342tssdtwe"
+	tokenTTL   = 12 * time.Hour
+)
+
+type tokenClaims struct {
+	jwt.StandardClaims
+	UserId int `json:"user_id"`
 }
 
-func NewAuthService(repo repository.StorageUsers) *AuthService {
+type AuthService struct {
+	repo repository.Authorization
+}
+
+func NewAuthService(repo repository.Authorization) *AuthService {
 	return &AuthService{repo: repo}
 }
 
-func (r *AuthService) Set(user *model.User) error {
-	err := r.repo.Set(user)
-	if err != nil {
-		log.Printf("Ошибка при добавлении пользователя: %v", err)
-	}
-	return err
-}
-func (r *AuthService) Get(id int64) (*model.User, error) {
-	user, err := r.repo.Get(id)
-	if err != nil {
-		log.Printf("Ошибка при получении пользователя: %v", err)
-		return nil, err
-	}
-	return user, err
-}
-func (r *AuthService) Check(id int64) (bool, error) {
-	exists, err := r.repo.Check(id)
-	if err != nil {
-		log.Printf("Ошибка при проверке пользователя: %v", err)
-		return false, err
-	}
+func generateHashPassword(password string) string {
+	hash := sha1.New()
+	hash.Write([]byte(password))
 
-	return exists, nil
+	return fmt.Sprintf("%x", hash.Sum([]byte(salt)))
 
 }
 
-func (r *AuthService) Delete(id int64) error {
-
-	if err := r.repo.Delete(id); err != nil {
-		return fmt.Errorf("ошибка при удалении пользователя: %v", err)
-	}
-	return nil
+func (s *AuthService) CreateUser(user model.User) (int, error) {
+	user.Password = generateHashPassword(user.Password)
+	return s.repo.CreateUser(user)
 }
-func (r *AuthService) GetAllId() ([]int64, error) {
-	ids, err := r.repo.GetAllId()
+
+func (s *AuthService) GenerateToken(username, password string) (string, error) {
+	user, err := s.repo.GetUser(username, generateHashPassword(password))
 	if err != nil {
-		log.Printf("Ошибка при получении ID: %v", err)
-		return nil, err
+		return "", err
 	}
-	return ids, nil
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
+		jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(tokenTTL).Unix(),
+			IssuedAt:  time.Now().Unix(),
+		},
+		user.Id,
+	})
+	return token.SignedString([]byte(signingKey))
+}
+
+func (s *AuthService) ParseToken(accessToken string) (int, error) {
+	token, err := jwt.ParseWithClaims(accessToken, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("invalid signing method")
+		}
+		return []byte(signingKey), nil
+	})
+	if err != nil {
+		return 0, nil
+	}
+	claims, ok := token.Claims.(*tokenClaims)
+	if !ok {
+		return 0, errors.New("token claims are not of type *tokenClaims")
+	}
+	return claims.UserId, nil
 }

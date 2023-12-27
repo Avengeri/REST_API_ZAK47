@@ -5,6 +5,18 @@ definitions:
       message:
         type: string
     type: object
+  handler.signInInput:
+    properties:
+      password:
+        example: qwerty
+        type: string
+      username:
+        example: ZAK
+        type: string
+    required:
+    - password
+    - username
+    type: object
   handler.statusResponse:
     properties:
       status:
@@ -18,11 +30,32 @@ definitions:
       name:
         example: ZAK
         type: string
+      password:
+        example: qwerty
+        type: string
+      username:
+        example: ZAK
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  model.UserExampleRegistration:
+    properties:
+      password:
+        example: qwerty
+        type: string
+      username:
+        example: ZAK
+        type: string
+    required:
+    - password
+    - username
     type: object
 host: localhost:8080
 info:
   contact: {}
-  description: Программа для обучения REST API
+  description: REST API Training Program
   title: REST_API_ZAK
   version: 0.0.1
 paths:
@@ -45,10 +78,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/handler.errorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Create a new user
       tags:
       - user
@@ -75,17 +106,15 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/handler.errorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Delete a user by ID
       tags:
       - user
     get:
       consumes:
       - application/json
-      description: Get a user with the provided JSON data
+      description: GetById a user with the provided JSON data
       parameters:
       - description: User ID
         format: int64
@@ -104,14 +133,16 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handler.errorResponse'
-      summary: Get a user
+      security:
+      - ApiKeyAuth: []
+      summary: GetById a user
       tags:
       - user
   /api/user/check/{id}:
     get:
       consumes:
       - application/json
-      description: Check if a user with the provided ID exists
+      description: CheckById if a user with the provided ID exists
       parameters:
       - description: User ID
         format: int64
@@ -134,18 +165,16 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/handler.errorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-      summary: Check if a user exists
+      security:
+      - ApiKeyAuth: []
+      summary: CheckById if a user exists
       tags:
       - user
   /api/user/get_all:
     get:
       consumes:
       - application/json
-      description: Get a list of all users with their IDs
+      description: GetById a list of all users with their IDs
       produces:
       - application/json
       responses:
@@ -159,7 +188,74 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/handler.errorResponse'
-      summary: Get a list of all users
+      security:
+      - ApiKeyAuth: []
+      summary: GetById a list of all users
       tags:
       - user
+  /auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates the user and returns the access token
+      parameters:
+      - description: User authentication data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.signInInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful authentication, returns the access token
+          schema:
+            type: string
+        "400":
+          description: Validation error or incorrect data
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: User authentication
+      tags:
+      - auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new user and returns his ID
+      parameters:
+      - description: New user's data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserExampleRegistration'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A user with the specified ID has been successfully created
+          schema:
+            type: string
+        "400":
+          description: Validation error or incorrect data
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Registering a new user
+      tags:
+      - auth
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

@@ -3,55 +3,53 @@ package main
 import (
 	srv "Interface_droch_3"
 	_ "Interface_droch_3/docs"
-	"Interface_droch_3/internal/repository/postgres"
-	"fmt"
-	_ "github.com/swaggo/files"
-	_ "github.com/swaggo/gin-swagger"
-	"os"
-
 	"Interface_droch_3/internal/handler"
 	"Interface_droch_3/internal/repository"
+	"Interface_droch_3/internal/repository/postgres"
 	"Interface_droch_3/internal/service"
+	"fmt"
 	"github.com/joho/godotenv"
-	"github.com/spf13/viper"
-
+	_ "github.com/swaggo/files"
+	_ "github.com/swaggo/gin-swagger"
 	"log"
+	"os"
 )
 
 // @title REST_API_ZAK
 // @version 0.0.1
-// @description Программа для обучения REST API
+// @description REST API Training Program
 
 // @host localhost:8080
 // @BasePath /
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
-	if err := initConfig(); err != nil {
-		log.Fatalf("Ошибка инициализации конфига: %s", err.Error())
-	}
 
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Ошибка загрузки переменной окружения: %s", err.Error())
+		log.Fatalf("error loading environment variable: %s", err.Error())
 	}
 
 	db, err := postgres.NewPostgresDB(postgres.Config{
-		Host:     viper.GetString("db.host"),
-		Port:     viper.GetString("db.port"),
+		Host:     os.Getenv("DB_HOST"),
+		Port:     os.Getenv("DB_PORT"),
 		Username: os.Getenv("DB_USER"),
-		DBName:   viper.GetString("db.dbname"),
-		SSLMode:  viper.GetString("db.sslmode"),
-		Password: os.Getenv("POSTGRES_PASSWORD"),
+		DBName:   os.Getenv("DB_NAME"),
+		SSLMode:  os.Getenv("DB_SSLMODE"),
+		Password: os.Getenv("DB_PASSWORD"),
 	})
 
 	if err != nil {
-		log.Fatalf("Ошибка создания Postgres: %s", err.Error())
+		log.Fatalf("Postgres creation error: %s", err.Error())
 	}
 
 	//rdb, err := redis_storage.NewRedisClient(redis_storage.Config{
-	//	Addr: viper.GetString("rdb.address"),
+	//	Addr: os.Getenv("RDB_ADDRESS"),
 	//})
 	//
 	//if err != nil {
-	//	log.Fatalf("Ошибка создания Redis: %s", err.Error())
+	//	log.Fatalf("Redis creation error: %s", err.Error())
 	//}
 
 	//repo := repository.NewStorageUsersRedis(rdb)
@@ -59,22 +57,24 @@ func main() {
 	services := service.NewServiceUsers(repo)
 	handlers := handler.NewHandler(services)
 
-	port := viper.GetString("srv_port")
+	port := os.Getenv("SRV_PORT")
+	API := os.Getenv("API")
 
-	local := "Сервер запущен на: http://localhost:"
-	fmt.Printf("%s%s\n", local, port)
+	localPrint := fmt.Sprintf("the server is running on: http://localhost:%s/%s", port, API)
+	fmt.Println(localPrint)
 
-	localSwag := fmt.Sprintf("Swagger: http://localhost:%s/api/docs/index.html", port)
+	localSwag := fmt.Sprintf("swagger: http://localhost:%s/%s/docs/index.html", port, API)
 	fmt.Println(localSwag)
 
 	serv := new(srv.Server)
-	if err = serv.Run(viper.GetString("srv_port"), handlers.InitRoutes()); err != nil {
-		log.Fatalf("Не удалось запустить сервер: %s", err.Error())
+	if err = serv.Run(port, handlers.InitRoutes()); err != nil {
+		log.Fatalf("the server could not be started: %s", err.Error())
 	}
 
 }
-func initConfig() error {
-	viper.AddConfigPath("configs")
-	viper.SetConfigName("config")
-	return viper.ReadInConfig()
-}
+
+//func initConfig() error {
+//	viper.AddConfigPath("configs")
+//	viper.SetConfigName("config")
+//	return viper.ReadInConfig()
+//}
