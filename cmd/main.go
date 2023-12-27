@@ -58,12 +58,11 @@ func main() {
 	handlers := handler.NewHandler(services)
 
 	port := os.Getenv("SRV_PORT")
-	API := os.Getenv("API")
 
-	localPrint := fmt.Sprintf("the server is running on: http://localhost:%s/%s", port, API)
+	localPrint := fmt.Sprintf("the server is running on: http://localhost:%s/", port)
 	fmt.Println(localPrint)
 
-	localSwag := fmt.Sprintf("swagger: http://localhost:%s/%s/docs/index.html", port, API)
+	localSwag := fmt.Sprintf("swagger: http://localhost:%s/docs/index.html#/", port)
 	fmt.Println(localSwag)
 
 	serv := new(srv.Server)
