@@ -12,7 +12,7 @@
 
 ```yml
 DB_USER=postgres
-POSTGRES_PASSWORD=qwerty
+DB_PASSWORD=postgres
 ```
 
 ## 3) Запустите БД через docker-compose
@@ -60,13 +60,13 @@ make migrate_down
 - Для работы с БД типа PostgresQL в файле main.go закомментируйте Redis и раскомментируйте Postgres
 
 ```Go
-    db, err := postgres.NewPostgresDB(postgres.Config{
-Host:     viper.GetString("db.host"),
-Port:     viper.GetString("db.port"),
-Username: viper.GetString("db.username"),
-DBName:   viper.GetString("db.dbname"),
-SSLMode:  viper.GetString("db.sslmode"),
-Password: os.Getenv("POSTGRES_PASSWORD"),
+	db, err := postgres.NewPostgresDB(postgres.Config{
+Host:     os.Getenv("DB_HOST"),
+Port:     os.Getenv("DB_PORT"),
+Username: os.Getenv("DB_USER"),
+DBName:   os.Getenv("DB_NAME"),
+SSLMode:  os.Getenv("DB_SSLMODE"),
+Password: os.Getenv("DB_PASSWORD"),
 })
 
 if err != nil {
@@ -79,7 +79,7 @@ repo := repository.NewStorageUsersPostgres(db)
 
 ```Go
     rdb, err := redis_storage.NewRedisClient(redis_storage.Config{
-Addr: viper.GetString("rdb.address"),
+Addr: os.Getenv("RDB_ADDRESS"),
 })
 repo := repository.NewStorageUsersRedis(rdb)
 ```
